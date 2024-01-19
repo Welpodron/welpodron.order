@@ -242,6 +242,10 @@ class Utils
             throw new \Exception("Передан неверный тип плательщика");
         }
 
+        if (!Loader::includeModule('sale')) {
+            throw new \Exception("Не удалось подключить модуль sale");
+        }
+
         $arProps = [];
 
         $dbProps = Property::getList([
@@ -266,7 +270,7 @@ class Utils
                 'PERSON_TYPE_ID' => $personType,
                 'IS_ADDRESS' => "N",
                 'ACTIVE' => 'Y',
-                'REQUIRED' => 'Y',
+                // 'REQUIRED' => 'Y',
                 '!CODE' => false,
                 'DEFAULT_VALUE' => false
             ],

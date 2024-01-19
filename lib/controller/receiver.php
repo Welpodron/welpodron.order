@@ -37,6 +37,8 @@ class Receiver extends Controller
     const DEFAULT_FORM_GENERAL_ERROR_CODE = "FORM_GENERAL_ERROR";
     const DEFAULT_GOOGLE_URL = "https://www.google.com/recaptcha/api/siteverify";
 
+    const DEFAULT_ERROR_CONTENT = "При обработке Вашего запроса произошла ошибка, повторите попытку позже или свяжитесь с администрацией сайта";
+
     public function configureActions()
     {
         return [
@@ -182,7 +184,7 @@ class Receiver extends Controller
             return MutatorUtils::getMutationContent($path, $arParams, $from);
         } catch (\Throwable $th) {
             if (CurrentUser::get()->isAdmin()) {
-                $this->addError(new Error($th->getMessage(), $th->getCode()));
+                $this->addError(new Error($th->getMessage(), $th->getCode(), $th->getTrace()));
                 return;
             }
 
@@ -198,7 +200,7 @@ class Receiver extends Controller
                 return;
             } catch (\Throwable $th) {
                 if (CurrentUser::get()->isAdmin()) {
-                    $this->addError(new Error($th->getMessage(), $th->getCode()));
+                    $this->addError(new Error($th->getMessage(), $th->getCode(), $th->getTrace()));
                     return;
                 } else {
                     $this->addError(new Error(Option::get(self::DEFAULT_ORDER_MODULE_ID, 'ERROR_CONTENT_DEFAULT')));
@@ -210,10 +212,18 @@ class Receiver extends Controller
 
     public function addAction()
     {
+        global $APPLICATION;
+
         try {
             $this->loadModules();
 
             if (!_Basket::isNotCrawler()) {
+                throw new \Exception('Поисковые роботы не могут оформлять заказ');
+            }
+
+            if (!$_SERVER['HTTP_USER_AGENT']) {
+                throw new \Exception('Поисковые роботы не могут оформлять заказ');
+            } elseif (preg_match('/bot|crawl|curl|dataprovider|search|get|spider|find|java|majesticsEO|google|yahoo|teoma|contaxe|yandex|libwww-perl|facebookexternalhit/i', $_SERVER['HTTP_USER_AGENT'])) {
                 throw new \Exception('Поисковые роботы не могут оформлять заказ');
             }
 
@@ -460,12 +470,73 @@ class Receiver extends Controller
                 }
             }
 
-            $this->addError(new Error('234'));
+            $useSuccessContent = Option::get(self::DEFAULT_ORDER_MODULE_ID, 'USE_SUCCESS_CONTENT');
 
-            return $arDataValid;
+            $templateIncludeResult = "";
+
+            if ($useSuccessContent == 'Y') {
+                $templateIncludeResult =  Option::get(self::DEFAULT_ORDER_MODULE_ID, 'SUCCESS_CONTENT_DEFAULT');
+
+                $successFile = Option::get(self::DEFAULT_ORDER_MODULE_ID, 'SUCCESS_FILE');
+
+                if ($successFile) {
+                    ob_start();
+                    $APPLICATION->IncludeFile($successFile, [
+                        'arMutation' => [
+                            'PATH' => $successFile,
+                            'PARAMS' => [],
+                        ]
+                    ], ["SHOW_BORDER" => false, "MODE" => "php"]);
+                    $templateIncludeResult = ob_get_contents();
+                    ob_end_clean();
+                }
+            } else {
+                \LocalRedirect("/personal/orders/" . $result->getId());
+                return;
+            }
+
+            return $templateIncludeResult;
         } catch (\Throwable $th) {
-            $this->addError(new Error($th->getMessage(), $th->getCode()));
-            return;
+            if (CurrentUser::get()->isAdmin()) {
+                $this->addError(new Error($th->getMessage(), $th->getCode(), $th->getTrace()));
+                return;
+            }
+
+            try {
+                $useErrorContent = Option::get(self::DEFAULT_ORDER_MODULE_ID, 'USE_ERROR_CONTENT');
+
+                if ($useErrorContent == 'Y') {
+                    $errorFile = Option::get(self::DEFAULT_ORDER_MODULE_ID, 'ERROR_FILE');
+
+                    if (!$errorFile) {
+                        $this->addError(new Error(Option::get(self::DEFAULT_ORDER_MODULE_ID, 'ERROR_CONTENT_DEFAULT'), self::DEFAULT_FORM_GENERAL_ERROR_CODE));
+                        return;
+                    }
+
+                    ob_start();
+                    $APPLICATION->IncludeFile($errorFile, [
+                        'arMutation' => [
+                            'PATH' => $errorFile,
+                            'PARAMS' => [],
+                        ]
+                    ], ["SHOW_BORDER" => false, "MODE" => "php"]);
+                    $templateIncludeResult = ob_get_contents();
+                    ob_end_clean();
+                    $this->addError(new Error($templateIncludeResult));
+                    return;
+                }
+
+                $this->addError(new Error(self::DEFAULT_ERROR_CONTENT, self::DEFAULT_FORM_GENERAL_ERROR_CODE));
+                return;
+            } catch (\Throwable $th) {
+                if (CurrentUser::get()->isAdmin()) {
+                    $this->addError(new Error($th->getMessage(), $th->getCode(), $th->getTrace()));
+                    return;
+                } else {
+                    $this->addError(new Error(self::DEFAULT_ERROR_CONTENT, self::DEFAULT_FORM_GENERAL_ERROR_CODE));
+                    return;
+                }
+            }
         }
     }
 }

@@ -8,23 +8,32 @@ use Bitrix\Main\Config\Option;
 
 class welpodron_order extends CModule
 {
+    var $MODULE_ID = 'welpodron.order';
+
     private $DEFAULT_OPTIONS = [];
 
     public function __construct()
     {
         $this->MODULE_ID = 'welpodron.order';
-        $this->MODULE_VERSION = '1.0.0';
         $this->MODULE_NAME = 'Модуль для работы с заказом (welpodron.order)';
         $this->MODULE_DESCRIPTION = 'Модуль для работы с заказом';
         $this->PARTNER_NAME = 'Welpodron';
         $this->PARTNER_URI = 'https://github.com/Welpodron';
 
+        $arModuleVersion = [];
+        include(__DIR__ . "/version.php");
+
+        $this->MODULE_VERSION = $arModuleVersion["VERSION"];
+        $this->MODULE_VERSION_DATE = $arModuleVersion["VERSION_DATE"];
+
         $this->DEFAULT_OPTIONS = [
             'PERSON_TYPE_DEFAULT' => '1',
-            'USE_DELIVERY_AND_PAYMENT' => 'Y',
+            'USE_DELIVERY_AND_PAYMENT' => 'N',
             'DELIVERY_DEFAULT' => '1',
             'PAY_SYSTEM_DEFAULT' => '1',
-            'SUCCESS_CONTENT_DEFAULT' => '<p>Заказ успешно оформлен</p>',
+            'USE_SUCCESS_CONTENT' => 'Y',
+            'SUCCESS_CONTENT_DEFAULT' => '<p>Спасибо за заявку, в ближайшее время с Вами свяжется наш менеджер</p>',
+            'USE_ERROR_CONTENT' => 'Y',
             'ERROR_CONTENT_DEFAULT' => '<p>При обработке Вашего запроса произошла ошибка, повторите попытку позже или свяжитесь с администрацией сайта</p>',
             'BANNED_SYMBOLS' => '<,>,&,*,^,%,$,`,~,#,href,eval,script,/,\\,=,!,?',
             'USE_AGREEMENT_CHECK' => 'N',
@@ -66,8 +75,8 @@ class welpodron_order extends CModule
         global $APPLICATION;
 
         try {
-            if (!CopyDirFiles(__DIR__ . '/js/', Application::getDocumentRoot() . '/bitrix/js', true, true)) {
-                $APPLICATION->ThrowException('Не удалось скопировать js');
+            if (!CopyDirFiles(__DIR__ . '/packages/', Application::getDocumentRoot() . '/local/packages', true, true)) {
+                $APPLICATION->ThrowException('Не удалось скопировать используемый модулем пакет');
                 return false;
             };
         } catch (\Throwable $th) {
@@ -80,7 +89,7 @@ class welpodron_order extends CModule
 
     public function UnInstallFiles()
     {
-        Directory::deleteDirectory(Application::getDocumentRoot() . '/bitrix/js/' . $this->MODULE_ID);
+        Directory::deleteDirectory(Application::getDocumentRoot() . '/local/packages/' . $this->MODULE_ID);
     }
 
     public function DoInstall()

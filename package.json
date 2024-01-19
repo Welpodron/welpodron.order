@@ -1,18 +1,27 @@
 {
   "name": "welpodron.order",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "directories": {
-    "lib": "lib"
-  },
+  "version": "2.0.0",
+  "description": "Данный модуль предназначен для работы с заказами:\r - создание заказа с любого блока сайта",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build:package": "cd ./install/packages/welpodron.order && npm install && npm run compile",
+    "build:module": "node build.mjs",
+    "build": "npm run build:package && npm run build:module"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Welpodron/welpodron.order.git"
+  },
+  "keywords": [
+    "bitrix"
+  ],
+  "author": "welpodron",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Welpodron/welpodron.order/issues"
+  },
+  "homepage": "https://github.com/Welpodron/welpodron.order#readme",
   "devDependencies": {
-    "typescript": "^5.1.6"
+    "archiver": "^6.0.1",
+    "fast-glob": "^3.3.2"
   }
 }
