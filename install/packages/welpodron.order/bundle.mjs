@@ -47,6 +47,13 @@ import { nodeResolve } from '@rollup/plugin-node-resolve';
       dir: `./es`,
       preserveModules: true,
       sourcemap: true,
+      entryFileNames: (chunkInfo) => {
+        if (chunkInfo.name.includes('node_modules')) {
+          return chunkInfo.name.replace('node_modules', 'external') + '.js';
+        }
+
+        return '[name].js';
+      },
     },
     {
       format: 'cjs',
@@ -54,6 +61,13 @@ import { nodeResolve } from '@rollup/plugin-node-resolve';
       dir: `./cjs`,
       preserveModules: true,
       sourcemap: true,
+      entryFileNames: (chunkInfo) => {
+        if (chunkInfo.name.includes('node_modules')) {
+          return chunkInfo.name.replace('node_modules', 'external') + '.js';
+        }
+
+        return '[name].js';
+      },
     },
   ];
 
