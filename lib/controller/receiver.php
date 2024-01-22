@@ -470,6 +470,27 @@ class Receiver extends Controller
                 }
             }
 
+            $useSuccessRedirect = Option::get(self::DEFAULT_ORDER_MODULE_ID, 'USE_SUCCESS_REDIRECT');
+
+            if ($useSuccessRedirect) {
+                $redirectUrl = Option::get(self::DEFAULT_ORDER_MODULE_ID, 'SUCCESS_REDIRECT_URL');
+
+                if (is_string($redirectUrl)) {
+                    $redirectUrl = trim($redirectUrl);
+                    $redirectUrl = str_replace("#ORDER_ID#", $result->getId(), $redirectUrl);
+
+                    if ($redirectUrl) {
+                        if ($userId) {
+                            global $USER;
+                            $USER->Authorize($userId);
+                        }
+
+                        \LocalRedirect($redirectUrl);
+                        return;
+                    }
+                }
+            }
+
             $useSuccessContent = Option::get(self::DEFAULT_ORDER_MODULE_ID, 'USE_SUCCESS_CONTENT');
 
             $templateIncludeResult = "";
@@ -490,9 +511,6 @@ class Receiver extends Controller
                     $templateIncludeResult = ob_get_contents();
                     ob_end_clean();
                 }
-            } else {
-                \LocalRedirect("/personal/orders/" . $result->getId());
-                return;
             }
 
             return $templateIncludeResult;

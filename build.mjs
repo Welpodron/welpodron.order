@@ -15,7 +15,6 @@ const build = () => {
       '**/node_modules/**',
       '**/cjs/**',
       '**/types/**',
-      '**/iife/**/*.map',
       '**/*.json',
       '**/*.md',
       '**/*.mjs',

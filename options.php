@@ -50,6 +50,28 @@ $arTabs = [
                         'REQUIRED' => 'Y',
                     ],
                     [
+                        'NAME' => 'USE_SUCCESS_REDIRECT',
+                        'LABEL' => 'Использовать при успешном оформлении заказа редирект на страницу с заказом',
+                        'VALUE' => Option::get($moduleId, 'USE_SUCCESS_REDIRECT'),
+                        'TYPE' => 'checkbox',
+                    ],
+                    [
+                        'NAME' => 'SUCCESS_REDIRECT_URL',
+                        'LABEL' => 'Путь по которому будет происходить редирект',
+                        'VALUE' => Option::get($moduleId, 'SUCCESS_REDIRECT_URL'),
+                        'TYPE' => 'url_builder',
+                        'POPUP' => [
+                            'OPTIONS' => [
+                                [
+                                    "TEXT" => "ID заказа",
+                                    "TITLE" => "#ORDER_ID# - " . 'ID заказа',
+                                    "ONCLICK" => "__SetUrlVar('#ORDER_ID#', 'mnu_SUCCESS_REDIRECT_URL', 'SUCCESS_REDIRECT_URL')",
+                                ]
+                            ],
+                        ],
+                        'RELATION' => 'USE_SUCCESS_REDIRECT',
+                    ],
+                    [
                         'LABEL' => 'Если "Использовать при оформлении заказа доставку и оплату" не включено, то будет создаваться заказ без доставки и оплаты',
                         'TYPE' => 'note'
                     ],
